@@ -1,19 +1,11 @@
-version: 0.2
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ec2-user/webapp
+    overwrite: true
 
-phases:
-  install:
-    commands:
-      - echo Installing dependencies...
-  pre_build:
-    commands:
-      - echo Pre-build stage...
-  build:
-    commands:
-      - echo Zipping app files...
-      - zip -r app.zip .
-  post_build:
-    commands:
-      - echo Build completed.
-artifacts:
-  files:
-    - app.zip
+hooks:
+  ApplicationStart:
+    - location: scripts/start.sh
+      runas: ec2-user
