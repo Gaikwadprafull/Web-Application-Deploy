@@ -1,3 +1,4 @@
 #!/bin/bash
-echo "Stopping existing app..."
-pkill -f node || true
+sudo yum update -y
+cd /home/ec2-user/app
+npm install
