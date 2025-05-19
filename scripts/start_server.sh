@@ -1,4 +1,4 @@
 #!/bin/bash
-cd /home/ec2-user/deploy
-echo "Starting app..."
-nohup node app.js > app.log 2>&1 &
+
+cd /home/ec2-user/app
+nohup python3 app.py > flask.log 2>&1 &
