@@ -2,8 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ec2-user/app
-
+    destination: /home/ec2-user/app/scripts/
 hooks:
   AfterInstall:
     - location: scripts/set_permissions.sh
