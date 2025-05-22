@@ -1,2 +1,2 @@
 #!/bin/bash
-chmod +x /home/ec2-user/app/*.sh
+chmod u+x $APP_DIR
