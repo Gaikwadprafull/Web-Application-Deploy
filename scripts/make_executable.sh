@@ -1,5 +1,7 @@
 #!/bin/bash
 
-# Make your scripts executable - replace paths with your actual files
-chmod +x /home/ec2-user/myapp/start_server.sh
-chmod +x /home/ec2-user/myapp/another_script.sh
+chmod u+x scripts/install_dependencies.sh
+chmod u+x scripts/start_server.sh
+chmod u+x scripts/stop_server.sh
+chmod u+x scripts/set_permissions.sh
+chmod u+x scripts/env.sh
