@@ -2,10 +2,14 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ec2-user/app
+    destination: /home/ec2-user/myapp
 
 hooks:
-  ApplicationStart:
-    - location: scripts/start.sh
+  AfterInstall:
+    - location: scripts/make_executable.sh
+      timeout: 300
+      runas: ec2-user
+  AfterDeploy:
+    - location: scripts/start_server.sh
       timeout: 300
       runas: ec2-user
