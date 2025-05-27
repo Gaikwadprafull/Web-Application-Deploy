@@ -1,12 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "Stopping existing application..."
-# Example: kill process by name or port
-APP_PID=$(pgrep -f myapp)
+echo "Stopping existing app..."
+APP_PID=$(pgrep -f app.py)
 if [ -n "$APP_PID" ]; then
   kill -9 $APP_PID
-  echo "App stopped successfully."
+  echo "App stopped."
 else
-  echo "No running app found."
+  echo "No app running."
 fi
