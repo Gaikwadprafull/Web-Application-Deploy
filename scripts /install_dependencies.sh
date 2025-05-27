@@ -1,7 +1,5 @@
 #!/bin/bash
-set -e
-
-echo "Installing dependencies..."
 cd /home/ec2-user/myapp
-# Example for Python
+sudo yum update -y
+sudo yum install python3 -y
 pip3 install -r requirements.txt
