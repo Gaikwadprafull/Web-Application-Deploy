@@ -1,8 +1,7 @@
 version: 0.0
 os: linux
-
 files:
-  - source: Web-Application-Deploy/
+  - source: /
     destination: /home/ec2-user/myapp
     overwrite: yes
 
