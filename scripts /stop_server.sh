@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "Stopping existing app..."
-APP_PID=$(pgrep -f app.py)
-if [ -n "$APP_PID" ]; then
-  kill -9 $APP_PID
+echo "[stop_server.sh] Stopping any running app..."
+
+PID=$(pgrep -f app.py || true)
+
+if [[ -n "$PID" ]]; then
+  echo "Found running app with PID: $PID"
+  kill -9 $PID
   echo "App stopped."
 else
   echo "No app running."
