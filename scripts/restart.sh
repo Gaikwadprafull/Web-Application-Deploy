@@ -1,5 +1,5 @@
 #!/bin/bash 
-
+cd /home/ec2-user/myapp
   
 
 sudo pkill -f app.py 
