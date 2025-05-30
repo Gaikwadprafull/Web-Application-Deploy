@@ -2,20 +2,19 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      python: 3.11
     commands:
-      - echo Installing dependencies...
-      - pip install -r requirements.txt -t ./package
-
+      - echo "Installing..."
   build:
     commands:
-      - echo Build phase...
-      - echo Preparing files for deployment...
-
-artifacts:
-  files:
-    - appspec.yml
-    - scripts/**
-    - package/**
-    - app.py
+      - echo "Starting deployment to EC2"
+      - INSTANCE_ID=$(aws ec2 describe-instances \
+          --filters "Name=tag:Name,Values=dev-AppServer" \
+          --query "Reservations[*].Instances[*].InstanceId" \
+          --output text --region ap-south-1)
+      - echo "Deploying to $INSTANCE_ID"
+      - aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --instance-ids "$INSTANCE_ID" \
+          --comment "Deployment triggered from CodeBuild" \
+          --parameters 'commands=["cd /home/ec2-user/myapp && git pull origin dev && chmod +x deploy.sh && ./deploy.sh"]' \
+          --region ap-south-1
