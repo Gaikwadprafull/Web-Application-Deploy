@@ -3,16 +3,22 @@ os: linux
 files:
   - source: /
     destination: /home/ec2-user/myapp
+
 hooks:
+  BeforeInstall:
+    - location: scripts/stop_server.sh
+      timeout: 60
+      runas: ec2-user
+
   AfterInstall:
     - location: scripts/install_dependencies.sh
       timeout: 300
       runas: ec2-user
+    - location: scripts/make_executable.sh
+      timeout: 60
+      runas: ec2-user
+
   ApplicationStart:
     - location: scripts/start_server.sh
-      timeout: 300
-      runas: ec2-user
-  ApplicationStop:
-    - location: scripts/stop_server.sh
-      timeout: 300
+      timeout: 120
       runas: ec2-user
