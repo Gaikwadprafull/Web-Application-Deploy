@@ -16,21 +16,20 @@ phases:
     commands:
       - echo "Starting EC2 deployment using SSM..."
       - echo "Looking for EC2 instance with tag Name=dev-AppServer..."
-      
-      # Describe EC2 instance and capture instance ID
-      - INSTANCE_ID=$(aws ec2 describe-instances \
+      - |
+        INSTANCE_ID=$(aws ec2 describe-instances \
           --filters "Name=tag:Name,Values=dev-AppServer" \
           --query "Reservations[*].Instances[*].InstanceId" \
           --output text --region ap-south-1)
 
-      # Check if INSTANCE_ID is empty
-      - if [ -z "$INSTANCE_ID" ]; then echo "❌ ERROR: No EC2 instance found with tag Name=dev-AppServer"; exit 1; fi
+        if [ -z "$INSTANCE_ID" ]; then 
+          echo "❌ ERROR: No EC2 instance found with tag Name=dev-AppServer"
+          exit 1
+        fi
 
-      - echo "✅ Found EC2 Instance ID: $INSTANCE_ID"
+        echo "✅ Found EC2 Instance ID: $INSTANCE_ID"
 
-      # Send command to EC2 using SSM
-      - echo "Sending deployment command via SSM..."
-      - aws ssm send-command \
+        aws ssm send-command \
           --document-name "AWS-RunShellScript" \
           --instance-ids "$INSTANCE_ID" \
           --comment "Deployment triggered from CodeBuild" \
