@@ -27,7 +27,7 @@ phases:
           --document-name "AWS-RunShellScript" \
           --instance-ids "$INSTANCE_ID" \
           --comment "Triggered from CodeBuild" \
-          --parameters '{"commands":["cd /home/ec2-user/myapp","git pull origin dev","chmod +x deploy.sh","./deploy.sh"]}' \
+          --parameters '{"commands":["cd /home/ec2-user/myapp","chmod +x deploy.sh","./deploy.sh"]}' \
           --region ap-south-1
 
 artifacts:
