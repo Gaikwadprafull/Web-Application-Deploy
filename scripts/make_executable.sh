@@ -1,2 +1,4 @@
-#!/bin/bash
-chmod +x /home/ec2-user/myapp/scripts/*.sh
+chmod +x scripts/*.sh
+git add scripts/*.sh
+git commit -m "Fix: Dockerized start_server.sh"
+git push origin dev
