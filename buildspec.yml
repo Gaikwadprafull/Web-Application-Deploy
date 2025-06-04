@@ -7,7 +7,6 @@ phases:
   build:
     commands:
       - echo Build step...
-
 artifacts:
   files:
     - appspec.yml
