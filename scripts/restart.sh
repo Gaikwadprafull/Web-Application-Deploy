@@ -1,11 +1,18 @@
 #!/bin/bash
 
-# Stop running app
-pkill -f app.py || true
-sleep 1
-
-# Start new app version
 cd /home/ec2-user/myapp
-nohup python3 app.py > /tmp/output.log 2>&1 &
 
-echo "App restarted. Logs: /tmp/output.log"
+# Stop and remove old container if exists
+sudo docker stop flaskapp || true
+sudo docker rm flaskapp || true
+
+# Remove old image (optional but helpful for clean rebuild)
+sudo docker rmi flaskapp || true
+
+# Build new Docker image from updated source
+sudo docker build -t flaskapp .
+
+# Run new container on port 5000
+sudo docker run -d -p 5000:5000 --name flaskapp flaskapp
+
+echo "✅ Docker container restarted with latest code."
