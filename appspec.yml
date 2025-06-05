@@ -17,7 +17,7 @@ hooks:
       runas: ec2-user
 
     - location: scripts/install_cw_agent.sh     
-      timeout: 180
+      timeout: ec2-user
       runas: root                                
 
   ApplicationStart:
