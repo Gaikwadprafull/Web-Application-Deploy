@@ -1,5 +1,6 @@
 version: 0.0
 os: linux
+
 files:
   - source: /
     destination: /home/ec2-user/myapp
@@ -14,6 +15,10 @@ hooks:
     - location: scripts/install_dependencies.sh
       timeout: 300
       runas: ec2-user
+
+    - location: scripts/install_cw_agent.sh     
+      timeout: 180
+      runas: root                                
 
   ApplicationStart:
     - location: scripts/start_server.sh
