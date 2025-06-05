@@ -2,9 +2,14 @@
 
 echo "Installing CloudWatch Agent..."
 
-sudo yum install amazon-cloudwatch-agent -y
+# Install CloudWatch Agent
+sudo yum install -y amazon-cloudwatch-agent
 
-cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/bin/config.json
+# Create configuration directory if not exists
+sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+
+# Write config
+cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 {
   "agent": {
     "metrics_collection_interval": 60,
@@ -23,14 +28,19 @@ cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/bin/config.json
         "measurement": ["used_percent"],
         "metrics_collection_interval": 60,
         "resources": ["/"]
+      },
+      "cpu": {
+        "measurement": ["cpu_usage_user", "cpu_usage_system"],
+        "metrics_collection_interval": 60
       }
     }
   }
 }
 EOF
 
+# Start CloudWatch Agent
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config -m ec2 \
-  -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
-echo "CloudWatch Agent setup completed."
+echo "✅ CloudWatch Agent installed and running."
