@@ -1,10 +1,19 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo Installing jq...
+      - yum install -y jq
+      - echo Getting GitHub token from Secrets Manager...
+      - GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id prafull_github_token-ydYvUN --query SecretString --output text | jq -r .github_token)
+      - git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws --version
       - REPOSITORY_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-dev-env
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
@@ -28,3 +37,5 @@ artifacts:
   files:
     - appspec.yml
     - scripts/**/*
+    - Dockerfile
+    - app.py
