@@ -2,31 +2,22 @@ version: 0.2
 
 phases:
   install:
+    runtime-versions:
+      docker: 18
     commands:
       - echo Installing jq...
       - yum install -y jq
-      - echo Getting GitHub token from Secrets Manager...
+      - echo Retrieving GitHub token from AWS Secrets Manager...
       - |
         GITHUB_TOKEN=$(aws secretsmanager get-secret-value \
-          --secret-id prafull_github_token-ydYvUN \
+          --secret-id arn:aws:secretsmanager:us-east-1:851725602228:secret:prafull_github_token-ydYvUN \
           --query SecretString \
           --output text | jq -r .github_token)
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
-      - echo Getting DockerHub credentials from Secrets Manager...
-      - |
-        DOCKERHUB_USERNAME=$(aws secretsmanager get-secret-value \
-          --secret-id dockerhub_credentials \
-          --query SecretString \
-          --output text | jq -r .username)
-        DOCKERHUB_PASSWORD=$(aws secretsmanager get-secret-value \
-          --secret-id dockerhub_credentials \
-          --query SecretString \
-          --output text | jq -r .password)
-        echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo Logging into Amazon ECR...
       - REPOSITORY_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-stage-env
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
