@@ -12,6 +12,17 @@ phases:
           --query SecretString \
           --output text | jq -r .github_token)
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+      - echo Getting DockerHub credentials from Secrets Manager...
+      - |
+        DOCKERHUB_USERNAME=$(aws secretsmanager get-secret-value \
+          --secret-id dockerhub_credentials \
+          --query SecretString \
+          --output text | jq -r .username)
+        DOCKERHUB_PASSWORD=$(aws secretsmanager get-secret-value \
+          --secret-id dockerhub_credentials \
+          --query SecretString \
+          --output text | jq -r .password)
+        echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
   pre_build:
     commands:
