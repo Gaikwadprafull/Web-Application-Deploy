@@ -3,10 +3,38 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo Installing...
+      - echo Installing jq...
+      - yum install -y jq
+      - echo Getting GitHub token from Secrets Manager...
+      - |
+        GITHUB_TOKEN=$(aws secretsmanager get-secret-value \
+          --secret-id prafull_github_token-ydYvUN \
+          --query SecretString \
+          --output text | jq -r .github_token)
+        git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - REPOSITORY_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-stage-env
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
+
   build:
     commands:
-      - echo Build step...
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing Docker images to ECR...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:latest
+
 artifacts:
   files:
     - appspec.yml
