@@ -1,45 +1,37 @@
 version: 0.2
 
-phases:
-  install:
-    runtime-versions:
-      docker: 18
-    commands:
-      - echo Installing jq...
-      - yum install -y jq
-      - echo Retrieving GitHub token from AWS Secrets Manager...
-      - |
-        GITHUB_TOKEN=$(aws secretsmanager get-secret-value \
-          --secret-id arn:aws:secretsmanager:us-east-1:851725602228:secret:prafull_github_token-ydYvUN \
-          --query SecretString \
-          --output text | jq -r .github_token)
-        git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+env:
+  variables:
+    AWS_REGION: "us-east-1"
+    REPOSITORY_URI: "851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-stage-env"
 
+phases:
   pre_build:
     commands:
-      - echo Logging into Amazon ECR...
-      - REPOSITORY_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-stage-env
+      - echo Logging in to Amazon ECR...
+      - aws --version
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
 
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Docker image...
+      - echo Building Docker image...
       - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
-      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
 
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing Docker images to ECR...
+      - echo Tagging the image with 'latest'...
+      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
+      - echo Pushing image to ECR...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
+      - echo Creating imagedefinitions.json...
+      - printf '[{"name":"prafull-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
+    - imagedefinitions.json
     - appspec.yml
     - scripts/**/*
-    - Dockerfile
-    - app.py
