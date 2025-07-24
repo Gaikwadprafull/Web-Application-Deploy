@@ -1,52 +1,37 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_REGION: "us-east-1"
+    REPOSITORY_URI: "851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-dev-env"
+
 phases:
-  install:
-    commands:
-      - echo Installing dependencies...
-      - yum install -y jq
-      - echo Fetching GitHub token from Secrets Manager...
-      - |
-        GITHUB_TOKEN=$(aws secretsmanager get-secret-value \
-          --secret-id prafull_github_token-ydYvUN \
-          --query SecretString \
-          --output text | jq -r .github_token)
-        git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
-
-      - echo Fetching Docker credentials from Secrets Manager...
-      - |
-        DOCKER_SECRET=$(aws secretsmanager get-secret-value \
-          --secret-id prafull_docker_credentials \
-          --query SecretString \
-          --output text)
-        DOCKER_USERNAME=$(echo $DOCKER_SECRET | jq -r .username)
-        DOCKER_PASSWORD=$(echo $DOCKER_SECRET | jq -r .password)
-
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - REPOSITORY_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-dev-env
+      - aws --version
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin $REPOSITORY_URI
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
 
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Docker image...
+      - echo Building Docker image...
       - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
-      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
 
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing Docker images to ECR...
+      - echo Tagging the image with 'latest'...
+      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
+      - echo Pushing image to ECR...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
+      - echo Creating imagedefinitions.json...
+      - printf '[{"name":"prafull-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
+    - imagedefinitions.json
     - appspec.yml
     - scripts/**/*
-    - Dockerfile
-    - app.py
