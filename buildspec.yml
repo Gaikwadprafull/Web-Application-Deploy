@@ -2,10 +2,12 @@ version: 0.2
 
 phases:
   install:
+    runtime-versions:
+      docker: 20
     commands:
-      - echo Installing jq...
+      - echo Installing dependencies...
       - yum install -y jq
-      - echo Getting GitHub token from Secrets Manager...
+      - echo Fetching GitHub token from Secrets Manager...
       - |
         GITHUB_TOKEN=$(aws secretsmanager get-secret-value \
           --secret-id prafull_github_token-ydYvUN \
@@ -13,13 +15,22 @@ phases:
           --output text | jq -r .github_token)
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
 
+      - echo Fetching Docker credentials from Secrets Manager...
+      - |
+        DOCKER_SECRET=$(aws secretsmanager get-secret-value \
+          --secret-id prafull_docker_credentials \
+          --query SecretString \
+          --output text)
+        DOCKER_USERNAME=$(echo $DOCKER_SECRET | jq -r .username)
+        DOCKER_PASSWORD=$(echo $DOCKER_SECRET | jq -r .password)
+
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - REPOSITORY_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-dev-env
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin $REPOSITORY_URI
 
   build:
     commands:
