@@ -1,15 +1,13 @@
 #!/bin/bash
-echo "Starting Dockerized Flask app..." >> /tmp/deploy.log
-cd /home/ec2-user/myapp
 
-# Stop and remove previous container (if any)
-docker stop flaskapp-container || true
-docker rm flaskapp-container || true
+echo "Starting new Docker container..."
 
-# Build Docker image
-docker build -t flaskapp . >> /tmp/deploy.log 2>&1
+REPO_URI=851725602228.dkr.ecr.us-east-1.amazonaws.com/prafull-prod-env
+IMAGE_TAG=latest
 
-# Run the container
-docker run -d --name flaskapp-container -p 5000:5000 flaskapp >> /tmp/deploy.log 2>&1
+# Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPO_URI
 
-echo "Flask Docker container started." >> /tmp/deploy.log
+# Pull and run the image
+docker pull $REPO_URI:$IMAGE_TAG
+docker run -d -p 5000:5000 --name flaskapp $REPO_URI:$IMAGE_TAG
